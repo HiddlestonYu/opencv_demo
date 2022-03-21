@@ -1,23 +1,24 @@
 package com.example.opencv_demo;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.d(TAG, "OpenCv is not loading");
         }
     }
+
 
 
     @Override
@@ -60,6 +62,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         grayBtn.setOnClickListener(this);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.action_gary:
+                Intent mainIntent = new Intent(this, MainActivity.class);
+                startActivity(mainIntent);
+                finish();
+                break;
+
+            case R.id.action_fourier:
+                Intent fourierIntent = new Intent(this, FourierActivity.class);
+                startActivity(fourierIntent);
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -78,6 +103,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Imgproc.cvtColor(mat, matGray, Imgproc.COLOR_BGR2GRAY);
             bitmapProcess = opencvMatToBitmap(matGray);
             img.setImageBitmap(bitmapProcess);
+            //let opencv mat release
+            mat.release();
+            matGray.release();
 
         }else{
             img.setImageBitmap(image);
