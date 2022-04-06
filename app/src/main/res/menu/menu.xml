@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+<menu xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
         android:id="@+id/action_gary"
         android:title="GrayScale" />
     <item
-        android:id="@+id/action_fourier"
-        android:title="FoourierTransform" />
+        android:id="@+id/action_Fourier"
+        android:title="FourierTransform" />
+    <item
+        android:id="@+id/action_FFT"
+        android:title="Fast Fourier Transform" />
+    <item
+        android:id="@+id/action_performance"
+        android:title="Android Performance" />
 </menu>

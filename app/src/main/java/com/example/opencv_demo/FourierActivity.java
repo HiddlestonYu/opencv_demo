@@ -9,6 +9,8 @@ import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -32,68 +34,41 @@ public class FourierActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fourier);
 
-//        if (!OpenCVLoader.initDebug()){
-//            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
-//            Log.d(TAG, "initDebug not : ");
-//
-//        }else{
-//            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
-//            Log.d(TAG, "initDebug: ");
-//        }
+        if (!OpenCVLoader.initDebug()){
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
+            Log.d(TAG, "initDebug not : ");
+
+        }else{
+            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+            Log.d(TAG, "initDebug: ");
+        }
+        // setObjectView
         iv_timeDomain = (ImageView) this.findViewById(R.id.iv_timeDomain);
         iv_frequencyDomain = (ImageView)this.findViewById(R.id.iv_frequencyDomain);
-
-//        File root = Environment.getExternalStorageDirectory();
-//        File file = new File(root, "allen_0_001.bmp");
-//        Log.e(getString(R.string.app_name), "File exists: " + file.exists());
-//        Log.e(getString(R.string.app_name), "Trying to read: " + file.getAbsolutePath());
-//        Mat BGRMat = Imgcodecs.imread(file.getAbsolutePath(), Imgcodecs.IMREAD_GRAYSCALE);
-//        Mat BGRMat = Imgcodecs.imread("D:\\allen_0_001.bmp", Imgcodecs.IMREAD_GRAYSCALE);
-
-//        bitmap = opencvMatToBitmap(BGRMat);
-//        iv_timeDomain.setImageBitmap(bitmap);
-//        Log.d(TAG, "BGRMat size: " + BGRMat.size());
+        // android Drawable直接讀取bitmap , 尚未改成opencv imread(file path)
 
 
-//        Mat I = Imgcodecs.imread("C:\\Users\\raydium\\AndroidStudioProjects\\opencv_demo\\app\\src\\main\\res\\drawable\\allen_0_001.bmp", Imgcodecs.IMREAD_GRAYSCALE);
-//        Log.d(TAG, "mat type: " + I.type());
-//        bitmap = opencvMatToBitmap(I);
-//        iv_timeDomain.setImageBitmap(bitmap);
 
-//        myDFT();
+        bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.allen_0_001);
+        iv_timeDomain.setImageBitmap(bitmap);
+        mat = opencvBitmapToMat(bitmap);
+        Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
 
-            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.allen_0_001);
-            iv_timeDomain.setImageBitmap(bitmap);
-            mat = opencvBitmapToMat(bitmap);
-            Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
-//            Log.d(TAG, "mat type: " + mat.type());
-//            bitmap = opencvMatToBitmap(mat);
-//            iv_timeDomain.setImageBitmap(bitmap);
-            resultMat = getDFT(mat);
-            Log.d(TAG, "resultMat: " +  resultMat.size());
-            resultBitmap = opencvMatToBitmap(resultMat);
-            Log.d(TAG, "resultBitmapsize: " +  resultBitmap.getHeight() + resultBitmap.getWidth());
-            Log.d(TAG, "resultBitmapsize: " +  resultBitmap);
-            iv_frequencyDomain.setImageBitmap(resultBitmap);
+//        resultMat = myDFT(mat);
 
-//        bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.allen_0_001);
-//        iv_timeDomain.setImageBitmap(bitmap);
-//        mat = opencvBitmapToMat(bitmap);
-//        Log.d(TAG, "mat type: " + mat.type());
-//        resultMat = getDFT(mat);
+        resultMat = getDFT(mat);
+        resultBitmap = opencvMatToBitmap(resultMat);
+        iv_frequencyDomain.setImageBitmap(resultBitmap);
+
+
     }
 
     private Mat getDFT(Mat singleChannel) {
 
         singleChannel.convertTo(mat, CvType.CV_64FC1);
-
+        Log.d(TAG, "mat type: " + mat.type());
         int m = Core.getOptimalDFTSize(mat.rows());
-        int n = Core.getOptimalDFTSize(mat.cols()); // on the border
-        // add zero
-        // values
-        // Imgproc.copyMakeBorder(image1,
-        // padded, 0, m -
-        // image1.rows(), 0, n
+        int n = Core.getOptimalDFTSize(mat.cols()); // on the border add zero values Imgproc.copyMakeBorder(image1, padded, 0, m - image1.rows(), 0, n )
 
         Mat padded = new Mat(new Size(n, m), CvType.CV_64FC1); // expand input
         // image to
@@ -108,25 +83,19 @@ public class FourierActivity extends AppCompatActivity {
 
         Mat complexI = Mat.zeros(padded.rows(), padded.cols(), CvType.CV_64FC2);
 
-        Mat complexI2 = Mat
-                .zeros(padded.rows(), padded.cols(), CvType.CV_64FC2);
+        Mat complexI2 = Mat.zeros(padded.rows(), padded.cols(), CvType.CV_64FC2);
 
-        Core.merge(planes, complexI); // Add to the expanded another plane with
-        // zeros
+        Core.merge(planes, complexI); // Add to the expanded another plane with zeros
 
-        Core.dft(complexI, complexI2); // this way the result may fit in the
-        // source matrix
+        Core.dft(complexI, complexI2); // this way the result may fit in the source matrix
 
         // compute the magnitude and switch to logarithmic scale
         // => log(1 + sqrt(Re(DFT(I))^2 + Im(DFT(I))^2))
-        Core.split(complexI2, planes); // planes[0] = Re(DFT(I), planes[1] =
-        // Im(DFT(I))
+        Core.split(complexI2, planes); // planes[0] = Re(DFT(I)), planes[1] = Im(DFT(I))
 
         Mat mag = new Mat(planes.get(0).size(), planes.get(0).type());
 
-        Core.magnitude(planes.get(0), planes.get(1), mag);// planes[0]
-        // =
-        // magnitude
+        Core.magnitude(planes.get(0), planes.get(1), mag);// planes[0] = magnitude
 
         Mat magI = mag;
         Mat magI2 = new Mat(magI.size(), magI.type());
@@ -176,14 +145,10 @@ public class FourierActivity extends AppCompatActivity {
         return realResult;
     }
 
-    private void myDFT() {
-        // android Drawable直接讀取bitmap , 尚未改成opencv imread(file path)
-        bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.allen_0_001);
-        iv_timeDomain.setImageBitmap(bitmap);
-        mat = opencvBitmapToMat(bitmap);
+    private Mat myDFT(Mat singleChannel) {
 
-        Mat mat = new Mat ( bitmap.getHeight(), bitmap.getWidth(), CvType.CV_64FC1, new Scalar(4));
-        Log.d(TAG, "mat type: " + mat.type());
+        singleChannel.convertTo(mat, CvType.CV_64FC1);
+
         Mat padded = new Mat();                     //expand input image to optimal size
         int m = Core.getOptimalDFTSize( mat.rows() );//whose size is a product of 2's, 3's, and 5's
         int n = Core.getOptimalDFTSize( mat.cols() ); // on the border add zero values
@@ -228,15 +193,8 @@ public class FourierActivity extends AppCompatActivity {
         // values 0 and 255).
 
         Mat realResult = new Mat();
-        magI.convertTo(realResult, CvType.CV_64FC1);
-
-        //Then convert the processed Mat to Bitmap
-        Bitmap resultBitmap = Bitmap.createBitmap(mat.cols(),  mat.rows(),Bitmap.Config.ARGB_8888);
-        ;
-        Utils.matToBitmap(mat, resultBitmap);
-
-        //Set member to the Result Bitmap. This member is displayed in an ImageView
-        iv_frequencyDomain.setImageBitmap(resultBitmap);
+        magI.convertTo(realResult, CvType.CV_8UC1);
+        return realResult;
     }
 
     BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
