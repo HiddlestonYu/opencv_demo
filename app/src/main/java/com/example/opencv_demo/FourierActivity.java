@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,6 +26,7 @@ import java.util.List;
 
 public class FourierActivity extends AppCompatActivity {
     private ImageView iv_timeDomain, iv_frequencyDomain;
+    private Button btn_dft_idft;
     private Bitmap bitmap, resultBitmap;
     private String TAG = FourierActivity.class.getSimpleName();
     private Mat mat, mat_1 ,resultMat;
@@ -45,6 +47,7 @@ public class FourierActivity extends AppCompatActivity {
         // setObjectView
         iv_timeDomain = (ImageView) this.findViewById(R.id.iv_timeDomain);
         iv_frequencyDomain = (ImageView)this.findViewById(R.id.iv_frequencyDomain);
+        btn_dft_idft = (Button) this.findViewById(R.id.btn_dft_idft);
         // android Drawable直接讀取bitmap , 尚未改成opencv imread(file path)
 
 
@@ -64,9 +67,9 @@ public class FourierActivity extends AppCompatActivity {
     }
 
     private Mat getDFT(Mat singleChannel) {
-
+//        Log.d(TAG, "InputData Type: " + singleChannel.type());
         singleChannel.convertTo(mat, CvType.CV_64FC1);
-        Log.d(TAG, "mat type: " + mat.type());
+//        Log.d(TAG, "mat type: " + mat.type());
         int m = Core.getOptimalDFTSize(mat.rows());
         int n = Core.getOptimalDFTSize(mat.cols()); // on the border add zero values Imgproc.copyMakeBorder(image1, padded, 0, m - image1.rows(), 0, n )
 
@@ -84,10 +87,14 @@ public class FourierActivity extends AppCompatActivity {
         Mat complexI = Mat.zeros(padded.rows(), padded.cols(), CvType.CV_64FC2);
 
         Mat complexI2 = Mat.zeros(padded.rows(), padded.cols(), CvType.CV_64FC2);
+        //IDFT
+       /* Mat complexI3 = Mat.zeros(padded.rows(), padded.cols(), CvType.CV_64FC2);
+        Mat complexI4 = Mat.zeros(padded.rows(), padded.cols(), CvType.CV_64FC2);*/
 
         Core.merge(planes, complexI); // Add to the expanded another plane with zeros
-
         Core.dft(complexI, complexI2); // this way the result may fit in the source matrix
+//        Log.d(TAG, "Diff DFT Time: " + (stop-start)* 1e-9);
+
 
         // compute the magnitude and switch to logarithmic scale
         // => log(1 + sqrt(Re(DFT(I))^2 + Im(DFT(I))^2))
@@ -142,7 +149,32 @@ public class FourierActivity extends AppCompatActivity {
 
         magI5.convertTo(realResult, CvType.CV_8UC1);
 
-        return realResult;
+        List<Mat> planesIDFT = new ArrayList<Mat>();
+        planesIDFT.add(padded);
+        planesIDFT.add(padded);
+        Mat invDFTcvt = new Mat(padded.size(), CvType.CV_8UC1);
+        Mat complexI3 = Mat.zeros(padded.rows(), padded.cols(), CvType.CV_64FC2);
+        Core.idft(complexI2, complexI3);
+        Core.split(complexI3, planesIDFT); // planes[0] = Re(DFT(I)), planes[1] = Im(DFT(I))
+        Core.normalize(planesIDFT.get(0), invDFTcvt, 0, 255, Core.NORM_MINMAX);
+        invDFTcvt.convertTo(invDFTcvt, CvType.CV_8UC1);
+        return invDFTcvt;
+
+
+       /* //IDFT
+        Mat IDFTResult = Mat.zeros(realResult.rows(), realResult.cols(), CvType.CV_64FC2);
+
+        Core.idft(IDFTResult, IDFTResult);
+
+        Mat restoredImage = new Mat();
+        Core.split(IDFTResult, planes);
+        Core.normalize(planes.get(0), restoredImage, 0, 255, Core.NORM_MINMAX);
+
+        Mat realResultIDFT = new Mat(restoredImage.size(), CvType.CV_8UC1);
+
+        restoredImage.convertTo(realResultIDFT, CvType.CV_8UC1);*/
+
+//        return realResult;
     }
 
     private Mat myDFT(Mat singleChannel) {

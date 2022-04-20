@@ -34,7 +34,6 @@ public class PerformanceActivity extends AppCompatActivity implements View.OnCli
                 C[i][j] = 0;
             }
         }
-         start = System.nanoTime();
     }
 
     private void ObjectInital() {
@@ -45,17 +44,46 @@ public class PerformanceActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public void onClick(View view) {
+        start = System.nanoTime();
+//        NestedLoop();
+        ArrayMultiple(A, B);
+        long stop = System.nanoTime();
+        double timeDiff = (stop - start) * 1e-9;
+        System.out.println("Elapsed time in seconds: " + timeDiff);
+        tv_info.setText("Elapsed time in seconds: " + String.valueOf(timeDiff));
+    }
+
+    private void ArrayMultiple(double[][] A, double [][] B){
+        int a_row = A.length;
+        int a_column = A[0].length;
+        int b_row = B.length;
+        int b_column = B[0].length;
+        double result[][] = new double[a_row][b_column];
+        for (int i=0;i<a_row;i++){
+            for(int j=0;j<b_column;j++){
+                for(int k=0;k<a_column;k++){
+                    result[i][j] += A[i][k]*B[k][j];
+                }
+                System.out.println(result[i][j] +"  ");;
+            }
+            System.out.println();
+        }
+
+
+    }
+
+    private void NestedLoop() {
         //matrix multiplication
-         for (int i = 0; i < n; i++) {
-             for (int j = 0; j < n; j++) {
-                 for (int k = 0; k < n; k++) {
-                     C[i][j] += A[i][k] * B[k][j];
-                 }
-             }
-         }
-         long stop = System.nanoTime();
-         double timeDiff = (stop - start) * 1e-9;
-         System.out.println("Elapsed time in seconds: " + timeDiff);
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                for (int k = 0; k < n; k++) {
+                    C[i][j] += A[i][k] * B[k][j];
+                }
+            }
+        }
+        long stop = System.nanoTime();
+        double timeDiff = (stop - start) * 1e-9;
+        System.out.println("Elapsed time in seconds: " + timeDiff);
         tv_info.setText("Elapsed time in seconds: " + String.valueOf(timeDiff));
     }
 }
