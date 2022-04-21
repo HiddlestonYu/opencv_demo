@@ -42,6 +42,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="148dp"
         android:text="Frequency domain"
+        android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="@+id/iv_frequencyDomain"
         app:layout_constraintStart_toStartOf="@+id/iv_frequencyDomain"
         app:layout_constraintTop_toTopOf="parent" />
